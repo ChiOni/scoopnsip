@@ -299,39 +299,61 @@
                         <div className="relative w-full max-w-6xl" style={{ aspectRatio: '16/9' }}>
                             {/* 더 선명한 세계 지도 SVG */}
                             <svg viewBox="0 0 100 60" className="w-full h-full absolute inset-0">
-                                {/* 북미 - 캐나다 & 미국 */}
-                                <path d="M 10,20 L 12,18 L 15,17 L 18,18 L 20,20 L 23,19 L 26,20 L 28,23 L 30,26 L 32,30 L 30,33 L 28,35 L 25,37 L 22,38 L 19,37 L 16,35 L 14,32 L 12,28 L 10,24 Z"
-                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.4"/>
+                                {/* 북미 - 캐나다 (북쪽 넓은 부분) */}
+                                <path d="M 8,12 L 10,10 L 14,9 L 18,10 L 22,11 L 26,12 L 30,13 L 33,15 L 34,18 L 33,21 L 31,22 L 28,22 L 25,21 L 22,20 L 19,19 L 16,18 L 13,17 L 10,15 L 8,13 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
 
-                                {/* 남미 */}
-                                <path d="M 24,50 L 26,48 L 28,49 L 29,52 L 30,56 L 29,60 L 28,64 L 27,68 L 26,72 L 24,74 L 22,73 L 21,70 L 21,66 L 22,62 L 23,58 L 24,54 Z"
-                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.4"/>
+                                {/* 북미 - 미국 본토 */}
+                                <path d="M 10,24 L 14,22 L 18,22 L 22,23 L 26,25 L 29,27 L 31,30 L 32,33 L 31,36 L 29,38 L 26,39 L 23,39 L 20,38 L 17,37 L 14,35 L 12,32 L 10,28 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
 
-                                {/* 유럽 */}
-                                <path d="M 42,36 L 44,35 L 47,36 L 49,37 L 51,38 L 53,39 L 54,41 L 54,43 L 53,45 L 51,46 L 49,46 L 47,45 L 45,44 L 43,42 L 42,40 Z"
-                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.4"/>
+                                {/* 중미 연결 */}
+                                <path d="M 22,40 L 24,39 L 26,40 L 27,42 L 28,45 L 27,47 L 25,48 L 23,47 L 22,45 L 21,43 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.25" opacity="0.3"/>
 
-                                {/* 아프리카 */}
-                                <path d="M 47,48 L 49,47 L 52,47 L 54,48 L 56,50 L 57,53 L 57,57 L 57,61 L 56,65 L 55,68 L 53,71 L 51,72 L 49,72 L 47,71 L 46,68 L 45,64 L 45,60 L 45,56 L 46,52 Z"
-                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.4"/>
+                                {/* 남미 - 가늘고 긴 모양 */}
+                                <path d="M 25,49 L 27,48 L 29,50 L 30,53 L 31,57 L 31,61 L 30,65 L 29,69 L 28,73 L 26,76 L 24,77 L 22,76 L 21,73 L 21,69 L 22,65 L 23,61 L 24,57 L 24,53 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
 
-                                {/* 아시아 */}
-                                <path d="M 58,25 L 61,23 L 64,24 L 67,25 L 70,27 L 73,29 L 76,28 L 78,30 L 79,33 L 78,36 L 76,38 L 73,40 L 70,41 L 67,41 L 64,40 L 61,38 L 59,35 L 58,32 L 58,28 Z"
-                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.4"/>
+                                {/* 그린란드 */}
+                                <path d="M 32,5 L 34,4 L 36,5 L 37,7 L 37,10 L 36,12 L 34,13 L 32,12 L 31,10 L 31,7 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.25" opacity="0.3"/>
 
-                                {/* 인도 & 동남아 */}
+                                {/* 유럽 - 작지만 복잡한 모양 */}
+                                <path d="M 44,32 L 46,31 L 48,32 L 50,33 L 52,34 L 53,36 L 54,38 L 54,40 L 53,42 L 52,44 L 50,45 L 48,45 L 46,44 L 45,42 L 44,40 L 43,37 L 43,34 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
+
+                                {/* 아프리카 - 특징적인 모양 */}
+                                <path d="M 48,45 L 50,45 L 52,46 L 54,47 L 56,49 L 57,52 L 58,56 L 58,60 L 57,64 L 56,67 L 54,70 L 52,72 L 50,73 L 48,72 L 47,70 L 46,67 L 46,63 L 46,59 L 46,55 L 47,51 L 47,48 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
+
+                                {/* 아시아 - 러시아 거대한 영토 */}
+                                <path d="M 55,15 L 58,14 L 62,15 L 66,16 L 70,17 L 74,18 L 78,19 L 81,21 L 83,24 L 84,27 L 83,30 L 81,32 L 78,33 L 75,33 L 72,32 L 69,31 L 66,30 L 63,29 L 60,28 L 58,26 L 56,23 L 55,20 L 55,17 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
+
+                                {/* 아시아 - 중국/몽골 지역 */}
+                                <path d="M 65,32 L 68,31 L 71,32 L 73,34 L 75,36 L 76,39 L 75,41 L 73,42 L 70,42 L 67,41 L 65,39 L 64,36 L 64,34 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
+
+                                {/* 인도 반도 */}
                                 <path d="M 62,42 L 64,41 L 66,42 L 68,44 L 69,47 L 69,50 L 68,52 L 66,53 L 64,52 L 62,50 L 61,47 L 61,44 Z"
-                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.4"/>
-
-                                {/* 호주 */}
-                                <path d="M 78,64 L 80,63 L 83,64 L 86,66 L 88,69 L 88,72 L 86,74 L 84,75 L 81,75 L 78,73 L 77,70 L 77,67 Z"
-                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.4"/>
-
-                                {/* 뉴질랜드 */}
-                                <path d="M 87,72 L 89,71 L 91,72 L 91,75 L 89,76 L 87,75 Z"
                                       fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
-                                <path d="M 87,77 L 88,76 L 90,77 L 89,79 L 87,78 Z"
+
+                                {/* 동남아 */}
+                                <path d="M 70,48 L 72,47 L 74,49 L 75,52 L 74,54 L 72,54 L 70,52 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.25" opacity="0.3"/>
+
+                                {/* 호주 - 넓은 대륙 */}
+                                <path d="M 77,62 L 80,61 L 83,62 L 86,64 L 88,66 L 90,69 L 90,72 L 88,75 L 85,76 L 82,76 L 79,75 L 77,73 L 76,70 L 76,66 L 77,64 Z"
                                       fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.3" opacity="0.35"/>
+
+                                {/* 뉴질랜드 북섬 */}
+                                <path d="M 89,73 L 91,72 L 92,74 L 91,76 L 89,75 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.25" opacity="0.3"/>
+
+                                {/* 뉴질랜드 남섬 */}
+                                <path d="M 88,77 L 90,76 L 91,78 L 90,80 L 88,79 Z"
+                                      fill="#E5E7EB" stroke="#D1D5DB" strokeWidth="0.25" opacity="0.3"/>
                             </svg>
 
                             {Object.entries(COUNTRIES).map(([key, country]) => {
