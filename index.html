@@ -81,7 +81,8 @@
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [loading, setLoading] = useState(true);
             const [saving, setSaving] = useState(false);
-            
+            const [editWine, setEditWine] = useState(null);
+
             const [newWine, setNewWine] = useState({
                 date: new Date().toISOString().split('T')[0],
                 name: '', image: null, imagePreview: null, winery: '', wineryInfo: '',
@@ -273,6 +274,104 @@
                 }
             }
 
+            async function handleEditWine() {
+                if (!editWine.name || !editWine.image || !editWine.winery) {
+                    alert('와인 이름, 사진, 와이너리 이름은 필수입니다.');
+                    return;
+                }
+
+                setSaving(true);
+
+                try {
+                    const updatedWine = {
+                        date: editWine.date,
+                        name: editWine.name,
+                        image: editWine.image,
+                        winery: editWine.winery,
+                        wineryInfo: editWine.wineryInfo,
+                        country: editWine.country,
+                        sweetness: editWine.sweetness,
+                        acidity: editWine.acidity,
+                        body: editWine.body,
+                        description: editWine.description,
+                        reviews: editWine.reviews,
+                        timestamp: editWine.timestamp
+                    };
+
+                    await db.collection('wines').doc(editWine.id).update(updatedWine);
+                    await loadWines();
+
+                    setEditWine(null);
+                    setPasswordInput('');
+                    setDrawerView('detail');
+
+                    alert('와인이 성공적으로 수정되었습니다!');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('수정에 실패했습니다: ' + error.message);
+                } finally {
+                    setSaving(false);
+                }
+            }
+
+            async function handleDeleteWine() {
+                if (!confirm('정말로 이 와인을 삭제하시겠습니까?')) {
+                    return;
+                }
+
+                setSaving(true);
+
+                try {
+                    await db.collection('wines').doc(selectedWine.id).delete();
+                    await loadWines();
+
+                    setSelectedWine(null);
+                    setPasswordInput('');
+                    setDrawerView('list');
+
+                    alert('와인이 성공적으로 삭제되었습니다!');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('삭제에 실패했습니다: ' + error.message);
+                } finally {
+                    setSaving(false);
+                }
+            }
+
+            function handleImageUploadForEdit(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+
+                            const maxSize = 800;
+                            if (width > height && width > maxSize) {
+                                height = (height * maxSize) / width;
+                                width = maxSize;
+                            } else if (height > maxSize) {
+                                width = (width * maxSize) / height;
+                                height = maxSize;
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            setEditWine({...editWine, image: compressedDataUrl});
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
             const countryWines = wines.filter(w => w.country === selectedCountry).sort((a, b) => b.timestamp - a.timestamp);
 
             if (loading) {
@@ -332,9 +431,18 @@
                             
                             <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-40 drawer scale-in overflow-hidden flex flex-col">
                                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                                    <button onClick={closeDrawer} className="text-gray-600 hover:text-gray-900">
+                                    <button onClick={() => {
+                                        if (drawerView === 'detail' || drawerView === 'password' || drawerView === 'create' || drawerView === 'edit' || drawerView === 'delete-confirm') {
+                                            setDrawerView('list');
+                                            setSelectedWine(null);
+                                            setEditWine(null);
+                                            setPasswordInput('');
+                                        } else {
+                                            closeDrawer();
+                                        }
+                                    }} className="text-gray-600 hover:text-gray-900">
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                         </svg>
                                     </button>
                                     <h2 className="font-serif text-xl font-semibold text-gray-900">{COUNTRIES[selectedCountry].name}</h2>
@@ -508,6 +616,105 @@
                                         </div>
                                     )}
 
+                                    {drawerView === 'edit' && editWine && (
+                                        <div className="p-6 space-y-6">
+                                            <h3 className="font-serif text-xl font-semibold text-gray-900">와인 수정</h3>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">판매 일자 *</label>
+                                                <input type="date" value={editWine.date} onChange={(e) => setEditWine({...editWine, date: e.target.value})}
+                                                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">와인 사진 *</label>
+                                                <div className="relative">
+                                                    <img src={editWine.image} alt="Preview" className="w-full rounded-lg" style={{aspectRatio: '1'}} />
+                                                    <label className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 cursor-pointer">
+                                                        <input type="file" accept="image/*" onChange={handleImageUploadForEdit} className="hidden" />
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">와인 이름 *</label>
+                                                <input type="text" value={editWine.name} onChange={(e) => setEditWine({...editWine, name: e.target.value})}
+                                                       placeholder="예: Château Margaux 2015"
+                                                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">와이너리 이름 *</label>
+                                                <input type="text" value={editWine.winery} onChange={(e) => setEditWine({...editWine, winery: e.target.value})}
+                                                       placeholder="예: Château Margaux"
+                                                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">와이너리 정보</label>
+                                                <textarea value={editWine.wineryInfo} onChange={(e) => setEditWine({...editWine, wineryInfo: e.target.value})}
+                                                          placeholder="와이너리의 역사, 특징 등" rows={3}
+                                                          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">당도: {editWine.sweetness}</label>
+                                                <input type="range" min="1" max="5" value={editWine.sweetness}
+                                                       onChange={(e) => setEditWine({...editWine, sweetness: parseInt(e.target.value)})} className="w-full" />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">산도: {editWine.acidity}</label>
+                                                <input type="range" min="1" max="5" value={editWine.acidity}
+                                                       onChange={(e) => setEditWine({...editWine, acidity: parseInt(e.target.value)})} className="w-full" />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">바디: {editWine.body}</label>
+                                                <input type="range" min="1" max="5" value={editWine.body}
+                                                       onChange={(e) => setEditWine({...editWine, body: parseInt(e.target.value)})} className="w-full" />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">와인 설명</label>
+                                                <textarea value={editWine.description} onChange={(e) => setEditWine({...editWine, description: e.target.value})}
+                                                          placeholder="와인의 특징, 향, 맛 등" rows={4}
+                                                          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">고객 후기</label>
+                                                <textarea value={editWine.reviews} onChange={(e) => setEditWine({...editWine, reviews: e.target.value})}
+                                                          placeholder="고객들의 감상" rows={4}
+                                                          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" />
+                                            </div>
+
+                                            <div className="flex gap-3 pt-4">
+                                                <button onClick={() => { setDrawerView('detail'); setEditWine(null); }}
+                                                        disabled={saving}
+                                                        className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                                    취소
+                                                </button>
+                                                <button onClick={handleEditWine}
+                                                        disabled={saving}
+                                                        className="flex-1 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                                    {saving ? (
+                                                        <>
+                                                            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                            </svg>
+                                                            <span>수정 중...</span>
+                                                        </>
+                                                    ) : '수정'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {drawerView === 'detail' && selectedWine && (
                                         <div>
                                             <img src={selectedWine.image} alt={selectedWine.name} className="w-full object-cover" style={{aspectRatio: '1'}} />
@@ -577,9 +784,87 @@
                                                     </div>
                                                 )}
 
-                                                <button onClick={() => { setDrawerView('list'); setSelectedWine(null); }}
-                                                        className="w-full py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition">
-                                                    목록으로 돌아가기
+                                                <div className="flex gap-3 pt-4">
+                                                    <button onClick={() => setDrawerView('edit-password')}
+                                                            className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition">
+                                                        수정
+                                                    </button>
+                                                    <button onClick={() => setDrawerView('delete-password')}
+                                                            className="flex-1 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition">
+                                                        삭제
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {drawerView === 'edit-password' && (
+                                        <div className="flex flex-col items-center justify-center py-20 px-6">
+                                            <div className="w-full max-w-xs">
+                                                <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">비밀번호 입력</h3>
+                                                <p className="text-sm text-gray-500 mb-6 text-center">수정하려면 관리자 비밀번호가 필요합니다</p>
+                                                <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)}
+                                                       onKeyPress={async (e) => {
+                                                           if (e.key === 'Enter') {
+                                                               const hash = await sha256(passwordInput);
+                                                               if (hash === PASSWORD_HASH) {
+                                                                   setEditWine({...selectedWine});
+                                                                   setDrawerView('edit');
+                                                               } else {
+                                                                   alert('비밀번호가 올바르지 않습니다.');
+                                                                   setPasswordInput('');
+                                                               }
+                                                           }
+                                                       }}
+                                                       placeholder="6자리 비밀번호" maxLength={6}
+                                                       className="w-full px-4 py-3 border border-gray-200 rounded-lg text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                                <button onClick={async () => {
+                                                    const hash = await sha256(passwordInput);
+                                                    if (hash === PASSWORD_HASH) {
+                                                        setEditWine({...selectedWine});
+                                                        setDrawerView('edit');
+                                                    } else {
+                                                        alert('비밀번호가 올바르지 않습니다.');
+                                                        setPasswordInput('');
+                                                    }
+                                                }}
+                                                        className="w-full mt-4 bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition">
+                                                    확인
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {drawerView === 'delete-password' && (
+                                        <div className="flex flex-col items-center justify-center py-20 px-6">
+                                            <div className="w-full max-w-xs">
+                                                <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">비밀번호 입력</h3>
+                                                <p className="text-sm text-gray-500 mb-6 text-center">삭제하려면 관리자 비밀번호가 필요합니다</p>
+                                                <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)}
+                                                       onKeyPress={async (e) => {
+                                                           if (e.key === 'Enter') {
+                                                               const hash = await sha256(passwordInput);
+                                                               if (hash === PASSWORD_HASH) {
+                                                                   await handleDeleteWine();
+                                                               } else {
+                                                                   alert('비밀번호가 올바르지 않습니다.');
+                                                                   setPasswordInput('');
+                                                               }
+                                                           }
+                                                       }}
+                                                       placeholder="6자리 비밀번호" maxLength={6}
+                                                       className="w-full px-4 py-3 border border-gray-200 rounded-lg text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-red-500" />
+                                                <button onClick={async () => {
+                                                    const hash = await sha256(passwordInput);
+                                                    if (hash === PASSWORD_HASH) {
+                                                        await handleDeleteWine();
+                                                    } else {
+                                                        alert('비밀번호가 올바르지 않습니다.');
+                                                        setPasswordInput('');
+                                                    }
+                                                }}
+                                                        className="w-full mt-4 bg-red-600 text-white py-3 rounded-lg font-medium hover:bg-red-700 transition">
+                                                    확인
                                                 </button>
                                             </div>
                                         </div>
