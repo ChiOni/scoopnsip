@@ -91,6 +91,12 @@
             });
 
             useEffect(() => {
+                // Firebase 연결 테스트
+                console.log('Firebase 초기화 상태:', {
+                    app: firebase.app().name,
+                    firestore: !!db,
+                    storage: !!storage
+                });
                 loadWines();
             }, []);
 
@@ -111,10 +117,12 @@
 
             async function saveWine(wine) {
                 try {
+                    console.log('=== 저장 시작 ===');
                     let imageUrl = wine.image;
 
                     // 이미지가 base64인 경우 Firebase Storage에 업로드
                     if (wine.image && wine.image.startsWith('data:')) {
+                        console.log('이미지 업로드 시작...');
                         const timestamp = Date.now();
                         const filename = `wines/${timestamp}_${Math.random().toString(36).substring(7)}.jpg`;
                         const storageRef = storage.ref(filename);
@@ -122,20 +130,42 @@
                         // base64를 blob으로 변환
                         const response = await fetch(wine.image);
                         const blob = await response.blob();
+                        console.log('Blob 생성 완료:', blob.size, 'bytes');
 
                         // Firebase Storage에 업로드
-                        await storageRef.put(blob);
+                        console.log('Storage 업로드 중...');
+                        const uploadTask = await storageRef.put(blob);
+                        console.log('Storage 업로드 완료:', uploadTask);
+
                         imageUrl = await storageRef.getDownloadURL();
+                        console.log('이미지 URL 획득:', imageUrl);
                     }
 
                     // Firestore에 저장
-                    await db.collection('wines').add({
+                    console.log('Firestore 저장 중...');
+                    const docRef = await db.collection('wines').add({
                         ...wine,
                         image: imageUrl
                     });
+                    console.log('Firestore 저장 완료:', docRef.id);
+                    console.log('=== 저장 성공 ===');
                 } catch (error) {
-                    console.error('저장 오류:', error);
-                    alert('저장에 실패했습니다. 다시 시도해주세요.');
+                    console.error('=== 저장 오류 상세 ===');
+                    console.error('Error name:', error.name);
+                    console.error('Error message:', error.message);
+                    console.error('Error code:', error.code);
+                    console.error('Full error:', error);
+
+                    let errorMessage = '저장에 실패했습니다.\n\n';
+                    if (error.code === 'storage/unauthorized') {
+                        errorMessage += '❌ Firebase Storage 권한 오류\n\nFirebase Console에서 Storage Rules를 확인해주세요.';
+                    } else if (error.code === 'permission-denied') {
+                        errorMessage += '❌ Firestore 권한 오류\n\nFirebase Console에서 Firestore Rules를 확인해주세요.';
+                    } else {
+                        errorMessage += '오류: ' + error.message;
+                    }
+
+                    alert(errorMessage);
                     throw error;
                 }
             }
