@@ -82,6 +82,7 @@
             const [passwordInput, setPasswordInput] = useState('');
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [loading, setLoading] = useState(true);
+            const [saving, setSaving] = useState(false);
             
             const [newWine, setNewWine] = useState({
                 date: new Date().toISOString().split('T')[0],
@@ -188,33 +189,44 @@
                     alert('와인 이름, 사진, 와이너리 이름은 필수입니다.');
                     return;
                 }
-                
-                const wine = {
-                    date: newWine.date,
-                    name: newWine.name,
-                    image: newWine.image,
-                    winery: newWine.winery,
-                    wineryInfo: newWine.wineryInfo,
-                    country: newWine.country,
-                    sweetness: newWine.sweetness,
-                    acidity: newWine.acidity,
-                    body: newWine.body,
-                    description: newWine.description,
-                    reviews: newWine.reviews,
-                    timestamp: Date.now()
-                };
-                
-                await saveWine(wine);
-                await loadWines();
-                
-                setNewWine({
-                    date: new Date().toISOString().split('T')[0],
-                    name: '', image: null, imagePreview: null, winery: '', wineryInfo: '',
-                    country: '', sweetness: 3, acidity: 3, body: 3, description: '', reviews: ''
-                });
-                setPasswordInput('');
-                setIsAuthenticated(false);
-                setDrawerView('list');
+
+                setSaving(true);
+
+                try {
+                    const wine = {
+                        date: newWine.date,
+                        name: newWine.name,
+                        image: newWine.image,
+                        winery: newWine.winery,
+                        wineryInfo: newWine.wineryInfo,
+                        country: newWine.country,
+                        sweetness: newWine.sweetness,
+                        acidity: newWine.acidity,
+                        body: newWine.body,
+                        description: newWine.description,
+                        reviews: newWine.reviews,
+                        timestamp: Date.now()
+                    };
+
+                    await saveWine(wine);
+                    await loadWines();
+
+                    setNewWine({
+                        date: new Date().toISOString().split('T')[0],
+                        name: '', image: null, imagePreview: null, winery: '', wineryInfo: '',
+                        country: '', sweetness: 3, acidity: 3, body: 3, description: '', reviews: ''
+                    });
+                    setPasswordInput('');
+                    setIsAuthenticated(false);
+                    setDrawerView('list');
+
+                    alert('와인이 성공적으로 저장되었습니다! 🍷');
+                } catch (error) {
+                    console.error('Error:', error);
+                    // saveWine에서 이미 alert를 표시하므로 여기서는 추가 처리 불필요
+                } finally {
+                    setSaving(false);
+                }
             }
 
             const countryWines = wines.filter(w => w.country === selectedCountry).sort((a, b) => b.timestamp - a.timestamp);
@@ -429,12 +441,22 @@
 
                                             <div className="flex gap-3 pt-4">
                                                 <button onClick={() => setDrawerView('list')}
-                                                        className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition">
+                                                        disabled={saving}
+                                                        className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                                     취소
                                                 </button>
                                                 <button onClick={handleCreateWine}
-                                                        className="flex-1 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition">
-                                                    저장
+                                                        disabled={saving}
+                                                        className="flex-1 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                                    {saving ? (
+                                                        <>
+                                                            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                            </svg>
+                                                            <span>저장 중...</span>
+                                                        </>
+                                                    ) : '저장'}
                                                 </button>
                                             </div>
                                         </div>
