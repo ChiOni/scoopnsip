@@ -12,6 +12,7 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -49,6 +50,7 @@
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const storage = firebase.storage();
     </script>
     
     <script type="text/babel">
@@ -66,7 +68,8 @@
             germany: { name: '독일', x: 52, y: 42, color: '#F59E0B' },
             portugal: { name: '포르투갈', x: 46, y: 50, color: '#EC4899' },
             southafrica: { name: '남아공', x: 55, y: 75, color: '#8B5CF6' },
-            korea: { name: '한국', x: 75, y: 43, color: '#10B981' }
+            korea: { name: '한국', x: 75, y: 43, color: '#10B981' },
+            japan: { name: '일본', x: 78, y: 45, color: '#EF4444' }
         };
         
         const PASSWORD_HASH = '1c8fe0ec46c4d990dc9d51da05b35d284fe86d9f0841777b4cf8a3a3284c16e9';
@@ -107,7 +110,28 @@
 
             async function saveWine(wine) {
                 try {
-                    await db.collection('wines').add(wine);
+                    let imageUrl = wine.image;
+
+                    // 이미지가 base64인 경우 Firebase Storage에 업로드
+                    if (wine.image && wine.image.startsWith('data:')) {
+                        const timestamp = Date.now();
+                        const filename = `wines/${timestamp}_${Math.random().toString(36).substring(7)}.jpg`;
+                        const storageRef = storage.ref(filename);
+
+                        // base64를 blob으로 변환
+                        const response = await fetch(wine.image);
+                        const blob = await response.blob();
+
+                        // Firebase Storage에 업로드
+                        await storageRef.put(blob);
+                        imageUrl = await storageRef.getDownloadURL();
+                    }
+
+                    // Firestore에 저장
+                    await db.collection('wines').add({
+                        ...wine,
+                        image: imageUrl
+                    });
                 } catch (error) {
                     console.error('저장 오류:', error);
                     alert('저장에 실패했습니다. 다시 시도해주세요.');
