@@ -297,10 +297,41 @@
 
                     <div className="w-full h-full pt-20 pb-8 px-8 flex items-center justify-center">
                         <div className="relative w-full max-w-6xl" style={{ aspectRatio: '16/9' }}>
-                            <svg viewBox="0 0 100 60" className="w-full h-full opacity-10">
-                                <ellipse cx="50" cy="30" rx="45" ry="25" fill="#E5E7EB" />
+                            {/* 미니멀 세계 지도 SVG */}
+                            <svg viewBox="0 0 100 60" className="w-full h-full absolute inset-0" style={{ opacity: 0.08 }}>
+                                {/* 북미 */}
+                                <path d="M 15,25 Q 18,22 22,23 L 25,20 L 28,22 L 30,25 L 28,30 Q 25,32 22,30 L 18,28 Z" fill="#6B7280" />
+                                <path d="M 12,30 Q 15,28 18,30 L 20,35 L 18,38 L 15,36 Q 12,34 12,30 Z" fill="#6B7280" />
+
+                                {/* 남미 */}
+                                <path d="M 22,50 Q 24,48 26,50 L 28,58 L 26,62 Q 24,64 22,62 L 20,58 Z" fill="#6B7280" />
+                                <path d="M 26,62 Q 28,60 30,62 L 32,68 L 30,72 Q 28,70 26,68 Z" fill="#6B7280" />
+
+                                {/* 유럽 */}
+                                <path d="M 45,38 Q 48,36 52,38 L 54,42 L 52,45 Q 48,46 45,44 Z" fill="#6B7280" />
+                                <path d="M 48,32 Q 50,30 53,32 L 55,36 L 53,38 Q 50,39 48,37 Z" fill="#6B7280" />
+
+                                {/* 아프리카 */}
+                                <path d="M 48,48 Q 52,46 56,48 L 58,58 L 56,68 Q 52,70 48,68 L 46,58 Z" fill="#6B7280" />
+
+                                {/* 아시아 */}
+                                <path d="M 58,28 Q 62,25 68,28 L 72,32 L 75,28 L 78,30 L 76,36 L 72,40 Q 68,42 62,40 L 58,36 Z" fill="#6B7280" />
+                                <path d="M 62,42 Q 65,40 68,42 L 70,48 L 68,52 Q 65,54 62,52 Z" fill="#6B7280" />
+
+                                {/* 호주 */}
+                                <path d="M 78,62 Q 82,60 86,62 L 88,68 L 86,72 Q 82,74 78,72 Z" fill="#6B7280" />
+
+                                {/* 뉴질랜드 */}
+                                <path d="M 88,70 L 90,68 L 92,70 L 91,74 L 89,75 Z" fill="#6B7280" />
+                                <path d="M 88,75 L 90,76 L 89,78 L 87,77 Z" fill="#6B7280" />
                             </svg>
-                            
+
+                            {/* 대륙 경계선 - 더 섬세한 디테일 */}
+                            <svg viewBox="0 0 100 60" className="w-full h-full absolute inset-0" style={{ opacity: 0.12 }}>
+                                <path d="M 15,25 Q 18,22 22,23 L 25,20 L 28,22 L 30,25 L 28,30 Q 25,32 22,30 L 18,28 Z M 12,30 Q 15,28 18,30 L 20,35 L 18,38 L 15,36 Q 12,34 12,30 M 22,50 Q 24,48 26,50 L 28,58 L 26,62 Q 24,64 22,62 L 20,58 Z M 26,62 Q 28,60 30,62 L 32,68 L 30,72 Q 28,70 26,68 M 45,38 Q 48,36 52,38 L 54,42 L 52,45 Q 48,46 45,44 M 48,32 Q 50,30 53,32 L 55,36 L 53,38 Q 50,39 48,37 M 48,48 Q 52,46 56,48 L 58,58 L 56,68 Q 52,70 48,68 L 46,58 M 58,28 Q 62,25 68,28 L 72,32 L 75,28 L 78,30 L 76,36 L 72,40 Q 68,42 62,40 L 58,36 M 62,42 Q 65,40 68,42 L 70,48 L 68,52 Q 65,54 62,52 M 78,62 Q 82,60 86,62 L 88,68 L 86,72 Q 82,74 78,72 M 88,70 L 90,68 L 92,70 L 91,74 L 89,75 M 88,75 L 90,76 L 89,78 L 87,77"
+                                      fill="none" stroke="#9CA3AF" strokeWidth="0.3" />
+                            </svg>
+
                             {Object.entries(COUNTRIES).map(([key, country]) => {
                                 const wineCount = wines.filter(w => w.country === key).length;
                                 return (
