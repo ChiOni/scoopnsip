@@ -12,7 +12,6 @@
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -50,7 +49,6 @@
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage();
     </script>
     
     <script type="text/babel">
@@ -94,8 +92,7 @@
                 // Firebase 연결 테스트
                 console.log('Firebase 초기화 상태:', {
                     app: firebase.app().name,
-                    firestore: !!db,
-                    storage: !!storage
+                    firestore: !!db
                 });
                 loadWines();
             }, []);
@@ -118,41 +115,19 @@
             async function saveWine(wine) {
                 try {
                     console.log('=== 저장 시작 ===');
-                    let imageUrl = wine.image;
 
-                    // 이미지가 base64인 경우 Firebase Storage에 업로드 시도
-                    if (wine.image && wine.image.startsWith('data:')) {
-                        try {
-                            console.log('이미지 업로드 시작...');
-                            const timestamp = Date.now();
-                            const filename = `wines/${timestamp}_${Math.random().toString(36).substring(7)}.jpg`;
-                            const storageRef = storage.ref(filename);
+                    // 이미지 크기 확인 (Firestore 문서 제한: 1MB)
+                    const imageSize = wine.image ? wine.image.length * 0.75 : 0; // base64 -> bytes
+                    console.log('이미지 크기:', Math.round(imageSize / 1024), 'KB');
 
-                            // base64를 blob으로 변환
-                            const response = await fetch(wine.image);
-                            const blob = await response.blob();
-                            console.log('Blob 생성 완료:', blob.size, 'bytes');
-
-                            // Firebase Storage에 업로드
-                            console.log('Storage 업로드 중...');
-                            const uploadTask = await storageRef.put(blob);
-                            console.log('Storage 업로드 완료:', uploadTask);
-
-                            imageUrl = await storageRef.getDownloadURL();
-                            console.log('이미지 URL 획득:', imageUrl);
-                        } catch (storageError) {
-                            console.warn('Storage 업로드 실패, base64로 저장:', storageError.message);
-                            // Storage 실패 시 base64 그대로 사용 (임시 방편)
-                            imageUrl = wine.image;
-                        }
+                    if (imageSize > 900000) { // 900KB 제한 (안전 마진)
+                        alert('이미지 크기가 너무 큽니다. 더 작은 이미지를 사용해주세요.');
+                        throw new Error('Image too large');
                     }
 
-                    // Firestore에 저장
+                    // Firestore에 저장 (이미지 base64 포함)
                     console.log('Firestore 저장 중...');
-                    const docRef = await db.collection('wines').add({
-                        ...wine,
-                        image: imageUrl
-                    });
+                    const docRef = await db.collection('wines').add(wine);
                     console.log('Firestore 저장 완료:', docRef.id);
                     console.log('=== 저장 성공 ===');
                 } catch (error) {
@@ -163,9 +138,7 @@
                     console.error('Full error:', error);
 
                     let errorMessage = '저장에 실패했습니다.\n\n';
-                    if (error.code === 'storage/unauthorized') {
-                        errorMessage += '❌ Firebase Storage 권한 오류\n\nFirebase Console에서 Storage Rules를 확인해주세요.';
-                    } else if (error.code === 'permission-denied') {
+                    if (error.code === 'permission-denied') {
                         errorMessage += '❌ Firestore 권한 오류\n\nFirebase Console에서 Firestore Rules를 확인해주세요.';
                     } else {
                         errorMessage += '오류: ' + error.message;
@@ -214,8 +187,43 @@
             function handleImageUpload(e) {
                 const file = e.target.files[0];
                 if (file) {
+                    // 이미지 압축 (최대 800x800, 품질 0.8)
                     const reader = new FileReader();
-                    reader.onloadend = () => setNewWine({...newWine, image: reader.result, imagePreview: reader.result});
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+
+                            // 최대 크기 제한 (800px)
+                            const maxSize = 800;
+                            if (width > height && width > maxSize) {
+                                height = (height * maxSize) / width;
+                                width = maxSize;
+                            } else if (height > maxSize) {
+                                width = (width * maxSize) / height;
+                                height = maxSize;
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            // JPEG로 변환, 품질 0.8
+                            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            setNewWine({...newWine, image: compressedDataUrl, imagePreview: compressedDataUrl});
+
+                            console.log('이미지 압축 완료:', {
+                                원본크기: file.size,
+                                압축후크기: Math.round(compressedDataUrl.length * 0.75),
+                                해상도: `${width}x${height}`
+                            });
+                        };
+                        img.src = event.target.result;
+                    };
                     reader.readAsDataURL(file);
                 }
             }
