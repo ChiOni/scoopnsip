@@ -293,15 +293,19 @@
                     });
 
                     if (!response.ok) {
-                        throw new Error('AI 분석 실패');
+                        const errorData = await response.json();
+                        console.error('API Error:', errorData);
+                        throw new Error(`AI 분석 실패: ${errorData.error?.message || response.statusText}`);
                     }
 
                     const data = await response.json();
+                    console.log('AI Response:', data);
                     const content = data.content[0].text;
 
                     // JSON 추출 (코드 블록이 있을 경우 제거)
                     const jsonMatch = content.match(/\{[\s\S]*\}/);
                     if (!jsonMatch) {
+                        console.error('Response content:', content);
                         throw new Error('JSON 파싱 실패');
                     }
 
@@ -323,7 +327,7 @@
                     alert('AI 분석 완료! 정보를 확인하고 필요시 수정해주세요.');
                 } catch (error) {
                     console.error('AI 분석 오류:', error);
-                    alert('AI 분석에 실패했습니다. 수동으로 입력해주세요.');
+                    alert(`AI 분석에 실패했습니다.\n\n오류: ${error.message}\n\nF12를 눌러 콘솔을 확인하거나 수동으로 입력해주세요.`);
                 } finally {
                     setAiLoading(false);
                 }
