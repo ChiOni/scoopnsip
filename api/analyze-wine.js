@@ -105,23 +105,35 @@ export default async function handler(req, res) {
         max_tokens: 2048,
         messages: [{
           role: 'user',
-          content: `"${labelData.wineName}"${labelData.winery ? ` from ${labelData.winery}` : ''}${labelData.vintage ? ` ${labelData.vintage}` : ''} 와인에 대한 정보를 알려주세요.
+          content: `다음 와인 정보를 기반으로 상세 정보를 제공해주세요:
+
+라벨 정보:
+- 와인 이름: ${labelData.wineName}
+- 와이너리: ${labelData.winery || '알 수 없음'}
+- 빈티지: ${labelData.vintage || '알 수 없음'}
+- 와인 타입: ${labelData.wineType || '알 수 없음'}
+- 지역: ${labelData.region || '알 수 없음'}
+- 포도 품종: ${labelData.grapeVariety || '알 수 없음'}
 
 다음 형식으로 JSON만 응답하세요:
 
 {
-  "name": "와인 전체 이름 (빈티지 포함)",
-  "winery": "와이너리 이름",
-  "wineryInfo": "와이너리 설명 (2-3문장, 한국어)",
-  "country": "국가 코드 (france, italy, spain, usa, chile, argentina, australia, newzealand, germany, portugal, southafrica, korea, japan 중 하나, 소문자)",
-  "wineType": "${labelData.wineType || 'Unknown'}",
-  "sweetness": 1-5 숫자,
-  "acidity": 1-5 숫자,
-  "body": 1-5 숫자,
-  "description": "와인 특징 설명 (3-4문장, 한국어)"
+  "name": "${labelData.wineName}${labelData.vintage ? ' ' + labelData.vintage : ''}",
+  "winery": "${labelData.winery || ''}",
+  "wineryInfo": "와이너리에 대한 간단한 설명 (2-3문장, 한국어로 작성)",
+  "country": "국가 코드 (france, italy, spain, usa, chile, argentina, australia, newzealand, germany, portugal, southafrica, korea, japan 중 하나, 소문자로)",
+  "sweetness": 1-5 사이 숫자 (${labelData.wineType === 'White' ? '화이트 와인 기준' : labelData.wineType === 'Red' ? '레드 와인 기준' : '일반적인 기준'}),
+  "acidity": 1-5 사이 숫자,
+  "body": 1-5 사이 숫자,
+  "description": "이 와인의 특징, 향, 맛에 대한 설명 (3-4문장, 한국어로 작성)"
 }
 
-정보를 찾을 수 없으면 null을 사용하세요. 추측하지 마세요.`
+중요:
+- 라벨에서 읽은 정보를 우선 사용하세요
+- country는 지역(${labelData.region})을 참고하여 추정하세요
+- ${labelData.wineType} 타입에 맞는 특성을 제공하세요
+- 일반적인 와인 지식을 활용하여 합리적인 값을 제공하세요
+- 모든 필드를 채워주세요 (null 금지)`
         }]
       })
     });
