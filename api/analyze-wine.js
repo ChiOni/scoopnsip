@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { image, reviews, apiKey } = req.body;
+    const { image, wineName, reviews, apiKey } = req.body;
 
     if (!apiKey) {
       return res.status(400).json({ error: 'API key is required' });
@@ -28,8 +28,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Image is required' });
     }
 
-    // Step 1: OCR - 라벨에서 텍스트 추출
-    console.log('Step 1: Extracting text from wine label...');
+    if (!wineName) {
+      return res.status(400).json({ error: 'Wine name is required' });
+    }
+
+    // Step 1: 이미지에서 추가 정보 추출 (와인 타입, 빈티지, 지역 등)
+    console.log('Step 1: Extracting additional info from wine label...');
     const ocrResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -53,19 +57,19 @@ export default async function handler(req, res) {
             },
             {
               type: 'text',
-              text: `이 와인 라벨의 모든 텍스트를 정확하게 읽어주세요. 다음 형식으로 응답하세요:
+              text: `이 와인 라벨에서 다음 정보를 추출해주세요. 와인 이름은 "${wineName}" 입니다.
+
+다음 형식으로 JSON만 응답하세요:
 
 {
-  "wineName": "라벨에 적힌 와인 이름 (정확하게)",
   "winery": "와이너리/생산자 이름",
-  "vintage": "빈티지 연도 (있다면)",
-  "wineType": "와인 타입 (Red, White, Rosé, Sparkling 중 하나, 라벨이나 와인 색상으로 판단)",
-  "region": "라벨에 적힌 지역/원산지",
-  "grapeVariety": "포도 품종 (있다면)",
-  "otherText": "기타 중요한 텍스트"
+  "vintage": "빈티지 연도 (YYYY 형식, 없으면 빈 문자열)",
+  "wineType": "와인 타입 (Red, White, Rosé, Sparkling 중 하나, 라벨이나 와인 색상으로 정확히 판단)",
+  "region": "라벨에 적힌 지역/원산지 (예: Bordeaux, Napa Valley)",
+  "grapeVariety": "포도 품종 (있다면)"
 }
 
-반드시 JSON만 응답하세요. 추측하지 말고 라벨에서 읽을 수 있는 것만 정확히 추출하세요.`
+반드시 JSON만 응답하세요.`
             }
           ]
         }]
@@ -87,11 +91,10 @@ export default async function handler(req, res) {
     }
 
     const labelData = JSON.parse(ocrMatch[0]);
-    console.log('OCR Result:', labelData);
+    console.log('Extracted label data:', labelData);
 
-    // Step 2: Web Search - 추출한 와인 이름으로 검색
-    const searchQuery = `${labelData.wineName} ${labelData.winery || ''} wine tasting notes characteristics`.trim();
-    console.log('Step 2: Searching web for:', searchQuery);
+    // Step 2: 사용자 입력 와인 이름 + 추출된 정보로 상세 정보 생성
+    console.log('Step 2: Generating wine details for:', wineName);
 
     const searchResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -105,10 +108,9 @@ export default async function handler(req, res) {
         max_tokens: 2048,
         messages: [{
           role: 'user',
-          content: `다음 와인 정보를 기반으로 상세 정보를 제공해주세요:
+          content: `"${wineName}" 와인에 대한 상세 정보를 제공해주세요.
 
-라벨 정보:
-- 와인 이름: ${labelData.wineName}
+라벨에서 추출한 정보:
 - 와이너리: ${labelData.winery || '알 수 없음'}
 - 빈티지: ${labelData.vintage || '알 수 없음'}
 - 와인 타입: ${labelData.wineType || '알 수 없음'}
@@ -118,22 +120,21 @@ export default async function handler(req, res) {
 다음 형식으로 JSON만 응답하세요:
 
 {
-  "name": "${labelData.wineName}${labelData.vintage ? ' ' + labelData.vintage : ''}",
-  "winery": "${labelData.winery || ''}",
-  "wineryInfo": "와이너리에 대한 간단한 설명 (2-3문장, 한국어로 작성)",
-  "country": "국가 코드 (france, italy, spain, usa, chile, argentina, australia, newzealand, germany, portugal, southafrica, korea, japan 중 하나, 소문자로)",
-  "sweetness": 1-5 사이 숫자 (${labelData.wineType === 'White' ? '화이트 와인 기준' : labelData.wineType === 'Red' ? '레드 와인 기준' : '일반적인 기준'}),
-  "acidity": 1-5 사이 숫자,
-  "body": 1-5 사이 숫자,
-  "description": "이 와인의 특징, 향, 맛에 대한 설명 (3-4문장, 한국어로 작성)"
+  "name": "${wineName}",
+  "winery": "${labelData.winery || '와이너리 이름'}",
+  "wineryInfo": "와이너리에 대한 간단한 설명 (2-3문장, 한국어)",
+  "country": "국가 코드 (france, italy, spain, usa, chile, argentina, australia, newzealand, germany, portugal, southafrica, korea, japan 중 하나, 소문자)",
+  "sweetness": 1-5 숫자,
+  "acidity": 1-5 숫자,
+  "body": 1-5 숫자,
+  "description": "이 와인의 특징, 향, 맛 설명 (3-4문장, 한국어)"
 }
 
-중요:
-- 라벨에서 읽은 정보를 우선 사용하세요
-- country는 지역(${labelData.region})을 참고하여 추정하세요
-- ${labelData.wineType} 타입에 맞는 특성을 제공하세요
-- 일반적인 와인 지식을 활용하여 합리적인 값을 제공하세요
-- 모든 필드를 채워주세요 (null 금지)`
+지침:
+- 와인 이름 "${wineName}"과 라벨 정보를 참고하여 정확한 정보를 제공하세요
+- ${labelData.wineType || '와인'} 타입에 맞는 특성을 제공하세요
+- 지역 정보(${labelData.region || '알 수 없음'})를 기반으로 country를 정확히 판단하세요
+- 모든 필드를 반드시 채워주세요 (null 금지)`
         }]
       })
     });

@@ -239,6 +239,11 @@
                     return;
                 }
 
+                if (!newWine.name) {
+                    alert('먼저 와인 이름을 입력해주세요!');
+                    return;
+                }
+
                 const apiKey = localStorage.getItem('claude_api_key');
                 if (!apiKey) {
                     alert('먼저 Claude API 키를 설정해주세요!');
@@ -256,6 +261,7 @@
                         },
                         body: JSON.stringify({
                             image: newWine.image.split(',')[1],
+                            wineName: newWine.name,
                             reviews: newWine.reviews,
                             apiKey: apiKey
                         })
@@ -625,7 +631,14 @@
                                                 )}
                                             </div>
 
-                                            {newWine.imagePreview && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">와인 이름 *</label>
+                                                <input type="text" value={newWine.name} onChange={(e) => setNewWine({...newWine, name: e.target.value})}
+                                                       placeholder="예: Château Margaux 2015"
+                                                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                                            </div>
+
+                                            {newWine.imagePreview && newWine.name && (
                                                 <button onClick={handleAIAutoFill}
                                                         disabled={aiLoading}
                                                         className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
@@ -647,13 +660,6 @@
                                                     )}
                                                 </button>
                                             )}
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">와인 이름 *</label>
-                                                <input type="text" value={newWine.name} onChange={(e) => setNewWine({...newWine, name: e.target.value})}
-                                                       placeholder="예: Château Margaux 2015"
-                                                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                                            </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-2">와이너리 이름 *</label>
