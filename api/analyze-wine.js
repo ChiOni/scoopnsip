@@ -92,6 +92,8 @@ export default async function handler(req, res) {
 
     const labelData = JSON.parse(ocrMatch[0]);
     console.log('Extracted label data:', labelData);
+    console.log('Wine name from user:', wineName);
+    console.log('Wine type from image:', labelData.wineType);
 
     // Step 2: 사용자 입력 와인 이름 + 추출된 정보로 상세 정보 생성
     console.log('Step 2: Generating wine details for:', wineName);
@@ -113,9 +115,15 @@ export default async function handler(req, res) {
 라벨에서 추출한 정보:
 - 와이너리: ${labelData.winery || '알 수 없음'}
 - 빈티지: ${labelData.vintage || '알 수 없음'}
-- 와인 타입: ${labelData.wineType || '알 수 없음'}
+- 이미지에서 판단한 타입: ${labelData.wineType || '알 수 없음'}
 - 지역: ${labelData.region || '알 수 없음'}
 - 포도 품종: ${labelData.grapeVariety || '알 수 없음'}
+
+**중요**: 와인 이름 "${wineName}"을 분석하세요:
+- "블랑(Blanc)" 포함 → White
+- "루즈(Rouge)" 포함 → Red
+- "로제(Rosé)" 포함 → Rosé
+- 와인 이름이 최우선 판단 근거입니다!
 
 다음 형식으로 JSON만 응답하세요:
 
@@ -124,17 +132,19 @@ export default async function handler(req, res) {
   "winery": "${labelData.winery || '와이너리 이름'}",
   "wineryInfo": "와이너리에 대한 간단한 설명 (2-3문장, 한국어)",
   "country": "국가 코드 (france, italy, spain, usa, chile, argentina, australia, newzealand, germany, portugal, southafrica, korea, japan 중 하나, 소문자)",
-  "sweetness": 1-5 숫자,
-  "acidity": 1-5 숫자,
-  "body": 1-5 숫자,
-  "description": "이 와인의 특징, 향, 맛 설명 (3-4문장, 한국어)"
+  "wineType": "와인 타입 (와인 이름에서 판단: Blanc→White, Rouge→Red, Rosé→Rosé)",
+  "sweetness": 1-5 숫자 (와인 타입에 맞게),
+  "acidity": 1-5 숫자 (와인 타입에 맞게),
+  "body": 1-5 숫자 (와인 타입에 맞게),
+  "description": "이 와인의 특징, 향, 맛 설명 (3-4문장, 한국어, 와인 타입에 맞게)"
 }
 
-지침:
-- 와인 이름 "${wineName}"과 라벨 정보를 참고하여 정확한 정보를 제공하세요
-- ${labelData.wineType || '와인'} 타입에 맞는 특성을 제공하세요
-- 지역 정보(${labelData.region || '알 수 없음'})를 기반으로 country를 정확히 판단하세요
-- 모든 필드를 반드시 채워주세요 (null 금지)`
+필수 규칙:
+1. 와인 이름에 "블랑(Blanc)"이 있으면 → wineType: "White", 화이트 와인 특성으로 설명
+2. 와인 이름에 "루즈(Rouge)"가 있으면 → wineType: "Red", 레드 와인 특성으로 설명
+3. 이미지 정보는 참고만 하고, 와인 이름이 최종 판단 기준
+4. 지역 정보(${labelData.region || '알 수 없음'})를 기반으로 country 판단
+5. 모든 필드 필수 입력`
         }]
       })
     });
@@ -154,6 +164,11 @@ export default async function handler(req, res) {
     }
 
     const wineData = JSON.parse(searchMatch[0]);
+    console.log('=== AI 분석 완료 ===');
+    console.log('사용자 입력 와인 이름:', wineName);
+    console.log('AI 판단 와인 타입:', wineData.wineType);
+    console.log('근거 - 와인 이름에 블랑 포함:', wineName.toLowerCase().includes('블랑') || wineName.toLowerCase().includes('blanc'));
+    console.log('근거 - 이미지에서 추출한 타입:', labelData.wineType);
     console.log('Final wine data:', wineData);
 
     return res.status(200).json(wineData);
