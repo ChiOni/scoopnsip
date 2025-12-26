@@ -86,6 +86,12 @@
             const [aiLoading, setAiLoading] = useState(false);
             const [showApiKeyModal, setShowApiKeyModal] = useState(false);
             const [apiKeyInput, setApiKeyInput] = useState('');
+            const [showFilterPanel, setShowFilterPanel] = useState(false);
+            const [filters, setFilters] = useState({
+                priceMin: '',
+                priceMax: '',
+                inStockOnly: false
+            });
 
             const [newWine, setNewWine] = useState({
                 date: new Date().toISOString().split('T')[0],
@@ -456,7 +462,29 @@
                 }
             }
 
-            const countryWines = wines.filter(w => w.country === selectedCountry).sort((a, b) => b.timestamp - a.timestamp);
+            // 필터링 함수
+            function applyFilters(wineList) {
+                return wineList.filter(wine => {
+                    // 가격 필터
+                    if (filters.priceMin && wine.price && parseInt(wine.price) < parseInt(filters.priceMin)) {
+                        return false;
+                    }
+                    if (filters.priceMax && wine.price && parseInt(wine.price) > parseInt(filters.priceMax)) {
+                        return false;
+                    }
+
+                    // 재고 필터
+                    if (filters.inStockOnly && wine.inStock === false) {
+                        return false;
+                    }
+
+                    return true;
+                });
+            }
+
+            // 필터 적용된 와인 목록
+            const filteredWines = applyFilters(wines);
+            const countryWines = filteredWines.filter(w => w.country === selectedCountry).sort((a, b) => b.timestamp - a.timestamp);
 
             if (loading) {
                 return (
@@ -480,13 +508,24 @@
                                     <p className="text-xs text-gray-500 mt-1">Wine Journey Around The World</p>
                                 </div>
                             </div>
-                            <button onClick={() => setShowApiKeyModal(true)}
-                                    className="p-2 rounded-full hover:bg-gray-100 transition">
-                                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setShowFilterPanel(!showFilterPanel)}
+                                        className="p-2 rounded-full hover:bg-gray-100 transition relative">
+                                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                    </svg>
+                                    {(filters.priceMin || filters.priceMax || filters.inStockOnly) && (
+                                        <span className="absolute top-1 right-1 w-2 h-2 bg-purple-600 rounded-full"></span>
+                                    )}
+                                </button>
+                                <button onClick={() => setShowApiKeyModal(true)}
+                                        className="p-2 rounded-full hover:bg-gray-100 transition">
+                                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </header>
 
@@ -499,7 +538,7 @@
                                  style={{ filter: 'grayscale(100%)' }} />
 
                             {Object.entries(COUNTRIES).map(([key, country]) => {
-                                const wineCount = wines.filter(w => w.country === key).length;
+                                const wineCount = filteredWines.filter(w => w.country === key).length;
                                 return (
                                     <div key={key} className="country-marker absolute transform -translate-x-1/2 -translate-y-1/2"
                                          style={{ left: `${country.x}%`, top: `${country.y}%` }}
@@ -1098,6 +1137,84 @@
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* 필터 패널 */}
+                    {showFilterPanel && (
+                        <>
+                            <div className="fixed inset-0 bg-black/20 z-40 fade-in" onClick={() => setShowFilterPanel(false)} />
+                            <div className="fixed top-0 right-0 bottom-0 w-80 bg-white shadow-2xl z-50 drawer scale-in">
+                                <div className="flex flex-col h-full">
+                                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                                        <h2 className="font-serif text-xl font-semibold text-gray-900">필터</h2>
+                                        <button onClick={() => setShowFilterPanel(false)} className="p-2 hover:bg-gray-100 rounded-full transition">
+                                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-3">가격 범위</label>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="최소"
+                                                        value={filters.priceMin}
+                                                        onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+                                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="최대"
+                                                        value={filters.priceMax}
+                                                        onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+                                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="flex items-center justify-between cursor-pointer group">
+                                                <span className="text-sm font-medium text-gray-700">재고 있는 와인만</span>
+                                                <div className="relative">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={filters.inStockOnly}
+                                                        onChange={(e) => setFilters({...filters, inStockOnly: e.target.checked})}
+                                                        className="sr-only"
+                                                    />
+                                                    <div className={`w-11 h-6 rounded-full transition ${filters.inStockOnly ? 'bg-purple-600' : 'bg-gray-200'}`}>
+                                                        <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${filters.inStockOnly ? 'transform translate-x-5' : ''}`}></div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        {(filters.priceMin || filters.priceMax || filters.inStockOnly) && (
+                                            <div className="pt-4 border-t border-gray-100">
+                                                <button
+                                                    onClick={() => setFilters({ priceMin: '', priceMax: '', inStockOnly: false })}
+                                                    className="w-full py-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition">
+                                                    모든 필터 초기화
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                                        <p className="text-xs text-gray-500 text-center">
+                                            필터링된 와인: {filteredWines.length}개 / 전체: {wines.length}개
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
                     )}
                 </div>
             );
