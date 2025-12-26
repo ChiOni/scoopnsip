@@ -378,7 +378,12 @@
                     };
 
                     await db.collection('wines').doc(editWine.id).update(updatedWine);
-                    await loadWines();
+
+                    // 즉시 UI 업데이트 (Firebase 재로딩 전)
+                    setSelectedWine({...editWine, ...updatedWine});
+
+                    // 백그라운드에서 전체 데이터 동기화
+                    loadWines();
 
                     setEditWine(null);
                     setPasswordInput('');
