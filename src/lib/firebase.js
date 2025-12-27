@@ -2,15 +2,15 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 
 /**
- * Firebase 설정 (환경 변수에서 가져옴)
+ * Firebase 설정 (환경 변수에서 가져오거나 기본값 사용)
  */
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAAIYwhWkTbCz8-1HyKTEt8AjfCwqyqqBc",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "scoopnsip-8948d.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "scoopnsip-8948d",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "scoopnsip-8948d.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "815208674310",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:815208674310:web:c33930138a5c2fdcc3bf87"
 };
 
 // Firebase 초기화

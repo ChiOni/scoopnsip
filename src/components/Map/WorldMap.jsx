@@ -13,11 +13,13 @@ function WorldMap({ wines, onCountryClick }) {
 
   return (
     <div className="relative w-full h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      {/* 세계 지도 배경 (SVG 또는 이미지) */}
-      <div className="absolute inset-0 opacity-10">
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <rect width="100" height="100" fill="#9333EA" opacity="0.1" />
-        </svg>
+      {/* 세계 지도 배경 */}
+      <div className="absolute inset-0 flex items-center justify-center p-8">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/2560px-World_map_-_low_resolution.svg.png"
+          alt="World Map"
+          className="w-full h-full object-contain opacity-20"
+        />
       </div>
 
       {/* 국가 마커들 */}
