@@ -160,7 +160,8 @@ function App() {
         name: wineData.name || newWine.name,
         winery: wineData.winery || newWine.winery,
         wineryInfo: wineData.wineryInfo || newWine.wineryInfo,
-        country: wineData.country || newWine.country,
+        // country는 사용자가 선택한 값 유지 (AI 결과로 덮어쓰지 않음)
+        country: newWine.country,
         sweetness: wineData.sweetness || newWine.sweetness,
         acidity: wineData.acidity || newWine.acidity,
         body: wineData.body || newWine.body,

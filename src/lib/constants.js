@@ -10,7 +10,7 @@ export const COUNTRIES = {
   argentina: { name: '아르헨티나', x: 36, y: 72, color: '#DB2777' },
   australia: { name: '호주', x: 77, y: 67, color: '#0891B2' },
   newzealand: { name: '뉴질랜드', x: 81, y: 80, color: '#65A30D' },
-  germany: { name: '독일', x: 51, y: 30, color: '#F59E0B' },
+  germany: { name: '독일', x: 50.5, y: 30, color: '#F59E0B' },
   portugal: { name: '포르투갈', x: 47, y: 36, color: '#EC4899' },
   southafrica: { name: '남아공', x: 53, y: 69, color: '#8B5CF6' },
   korea: { name: '한국', x: 72, y: 34, color: '#10B981' },
