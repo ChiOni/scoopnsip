@@ -4,14 +4,14 @@
 export const COUNTRIES = {
   france: { name: '프랑스', x: 49, y: 30, color: '#DC2626' },
   italy: { name: '이탈리아', x: 51, y: 32, color: '#059669' },
-  spain: { name: '스페인', x: 48, y: 33, color: '#D97706' },
+  spain: { name: '스페인', x: 48, y: 35, color: '#D97706' },
   usa: { name: '미국', x: 29, y: 35, color: '#2563EB' },
   chile: { name: '칠레', x: 34.5, y: 68, color: '#7C3AED' },
   argentina: { name: '아르헨티나', x: 36, y: 72, color: '#DB2777' },
   australia: { name: '호주', x: 77, y: 67, color: '#0891B2' },
-  newzealand: { name: '뉴질랜드', x: 81, y: 78, color: '#65A30D' },
-  germany: { name: '독일', x: 50, y: 31, color: '#F59E0B' },
-  portugal: { name: '포르투갈', x: 47, y: 34, color: '#EC4899' },
+  newzealand: { name: '뉴질랜드', x: 81, y: 80, color: '#65A30D' },
+  germany: { name: '독일', x: 51, y: 30, color: '#F59E0B' },
+  portugal: { name: '포르투갈', x: 47, y: 36, color: '#EC4899' },
   southafrica: { name: '남아공', x: 53, y: 69, color: '#8B5CF6' },
   korea: { name: '한국', x: 72, y: 34, color: '#10B981' },
   japan: { name: '일본', x: 74, y: 34, color: '#EF4444' }
