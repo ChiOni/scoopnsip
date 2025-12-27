@@ -24,40 +24,39 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'API key is required' });
     }
 
-    if (!image) {
-      return res.status(400).json({ error: 'Image is required' });
-    }
-
     if (!wineName) {
       return res.status(400).json({ error: 'Wine name is required' });
     }
 
-    // Step 1: 이미지에서 추가 정보 추출 (와인 타입, 빈티지, 지역 등)
-    console.log('Step 1: Extracting additional info from wine label...');
-    const ocrResponse = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: 'image/jpeg',
-                data: image
-              }
-            },
-            {
-              type: 'text',
-              text: `이 와인 라벨에서 다음 정보를 추출해주세요. 와인 이름은 "${wineName}" 입니다.
+    let labelData = {};
+
+    // Step 1: 이미지가 있으면 라벨에서 정보 추출, 없으면 skip
+    if (image) {
+      console.log('Step 1: Extracting additional info from wine label...');
+      const ocrResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-haiku-20241022',
+          max_tokens: 1024,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: 'image/jpeg',
+                  data: image
+                }
+              },
+              {
+                type: 'text',
+                text: `이 와인 라벨에서 다음 정보를 추출해주세요. 와인 이름은 "${wineName}" 입니다.
 
 다음 형식으로 JSON만 응답하세요:
 
@@ -70,32 +69,35 @@ export default async function handler(req, res) {
 }
 
 반드시 JSON만 응답하세요.`
-            }
-          ]
-        }]
-      })
-    });
+              }
+            ]
+          }]
+        })
+      });
 
-    if (!ocrResponse.ok) {
-      const errorData = await ocrResponse.json();
-      console.error('OCR Error:', errorData);
-      return res.status(ocrResponse.status).json({ error: 'OCR failed: ' + (errorData.error?.message || 'Unknown error') });
+      if (!ocrResponse.ok) {
+        const errorData = await ocrResponse.json();
+        console.error('OCR Error:', errorData);
+        return res.status(ocrResponse.status).json({ error: 'OCR failed: ' + (errorData.error?.message || 'Unknown error') });
+      }
+
+      const ocrData = await ocrResponse.json();
+      const ocrContent = ocrData.content[0].text;
+      const ocrMatch = ocrContent.match(/\{[\s\S]*\}/);
+      if (!ocrMatch) {
+        console.error('OCR content:', ocrContent);
+        return res.status(500).json({ error: 'Failed to parse OCR response' });
+      }
+
+      labelData = JSON.parse(ocrMatch[0]);
+      console.log('Extracted label data:', labelData);
+      console.log('Wine name from user:', wineName);
+      console.log('Wine type from image:', labelData.wineType);
+    } else {
+      console.log('No image provided, skipping OCR step');
     }
 
-    const ocrData = await ocrResponse.json();
-    const ocrContent = ocrData.content[0].text;
-    const ocrMatch = ocrContent.match(/\{[\s\S]*\}/);
-    if (!ocrMatch) {
-      console.error('OCR content:', ocrContent);
-      return res.status(500).json({ error: 'Failed to parse OCR response' });
-    }
-
-    const labelData = JSON.parse(ocrMatch[0]);
-    console.log('Extracted label data:', labelData);
-    console.log('Wine name from user:', wineName);
-    console.log('Wine type from image:', labelData.wineType);
-
-    // Step 2: 사용자 입력 와인 이름 + 추출된 정보로 상세 정보 생성
+    // Step 2: 와인 이름 + (선택적) 추출된 정보로 상세 정보 생성
     console.log('Step 2: Generating wine details for:', wineName);
 
     const searchResponse = await fetch('https://api.anthropic.com/v1/messages', {
@@ -112,12 +114,13 @@ export default async function handler(req, res) {
           role: 'user',
           content: `"${wineName}" 와인에 대한 상세 정보를 제공해주세요.
 
-라벨에서 추출한 정보:
+${image ? `라벨에서 추출한 정보:
 - 와이너리: ${labelData.winery || '알 수 없음'}
 - 빈티지: ${labelData.vintage || '알 수 없음'}
 - 이미지에서 판단한 타입: ${labelData.wineType || '알 수 없음'}
 - 지역: ${labelData.region || '알 수 없음'}
 - 포도 품종: ${labelData.grapeVariety || '알 수 없음'}
+` : '라벨 이미지 없음 - 와인 이름만으로 정보 생성'}
 
 **중요**: 와인 이름 "${wineName}"을 분석하세요:
 - "블랑(Blanc)" 포함 → White
@@ -143,7 +146,7 @@ export default async function handler(req, res) {
 1. 와인 이름에 "블랑(Blanc)"이 있으면 → wineType: "White", 화이트 와인 특성으로 설명
 2. 와인 이름에 "루즈(Rouge)"가 있으면 → wineType: "Red", 레드 와인 특성으로 설명
 3. 이미지 정보는 참고만 하고, 와인 이름이 최종 판단 기준
-4. 지역 정보(${labelData.region || '알 수 없음'})를 기반으로 country 판단
+4. ${image ? `지역 정보(${labelData.region || '알 수 없음'})를 기반으로 country 판단` : '와인 이름에서 국가 추론'}
 5. 모든 필드 필수 입력`
         }]
       })
@@ -168,7 +171,9 @@ export default async function handler(req, res) {
     console.log('사용자 입력 와인 이름:', wineName);
     console.log('AI 판단 와인 타입:', wineData.wineType);
     console.log('근거 - 와인 이름에 블랑 포함:', wineName.toLowerCase().includes('블랑') || wineName.toLowerCase().includes('blanc'));
-    console.log('근거 - 이미지에서 추출한 타입:', labelData.wineType);
+    if (image) {
+      console.log('근거 - 이미지에서 추출한 타입:', labelData.wineType);
+    }
     console.log('Final wine data:', wineData);
 
     return res.status(200).json(wineData);

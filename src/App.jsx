@@ -126,11 +126,6 @@ function App() {
   }
 
   async function handleAIAutoFill() {
-    if (!newWine.image) {
-      alert('먼저 와인 사진을 업로드해주세요!');
-      return;
-    }
-
     if (!newWine.name) {
       alert('먼저 와인 이름을 입력해주세요!');
       return;
@@ -146,7 +141,7 @@ function App() {
     setAiLoading(true);
     try {
       const wineData = await analyzeWine({
-        image: newWine.image.split(',')[1],
+        image: newWine.image ? newWine.image.split(',')[1] : null,
         wineName: newWine.name,
         reviews: newWine.reviews,
         apiKey: apiKey
@@ -181,8 +176,8 @@ function App() {
   }
 
   async function handleCreateWine() {
-    if (!newWine.name || !newWine.image || !newWine.winery) {
-      alert('와인 이름, 사진, 와이너리 이름은 필수입니다.');
+    if (!newWine.name || !newWine.winery) {
+      alert('와인 이름과 와이너리 이름은 필수입니다.');
       return;
     }
 
@@ -190,7 +185,7 @@ function App() {
       const wine = {
         date: newWine.date,
         name: newWine.name,
-        image: newWine.image,
+        image: newWine.image || null,
         winery: newWine.winery,
         wineryInfo: newWine.wineryInfo,
         country: newWine.country,
