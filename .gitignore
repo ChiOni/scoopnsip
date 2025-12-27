@@ -11,3 +11,12 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Environment variables
+.env.local
