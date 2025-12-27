@@ -25,7 +25,7 @@ function App() {
 
   // New wine form state
   const [newWine, setNewWine] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: '',
     name: '',
     image: null,
     imagePreview: null,
@@ -69,8 +69,7 @@ function App() {
       setPasswordInput('');
       setNewWine({
         ...newWine,
-        country: selectedCountry,
-        date: new Date().toISOString().split('T')[0]
+        country: selectedCountry
       });
     } else {
       alert('비밀번호가 올바르지 않습니다.');
@@ -183,7 +182,7 @@ function App() {
 
     try {
       const wine = {
-        date: newWine.date,
+        date: newWine.date || null,
         name: newWine.name,
         image: newWine.image || null,
         winery: newWine.winery,
@@ -202,7 +201,7 @@ function App() {
       await addWine(wine);
 
       setNewWine({
-        date: new Date().toISOString().split('T')[0],
+        date: '',
         name: '',
         image: null,
         imagePreview: null,

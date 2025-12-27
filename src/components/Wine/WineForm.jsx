@@ -32,18 +32,19 @@ export default function WineForm({
 
       {/* Date */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">판매 일자 *</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">최초 판매 일자</label>
         <input
           type="date"
           value={wine.date || ''}
           onChange={(e) => handleChange('date', e.target.value)}
           className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          placeholder="미입력 시 추후 등록 가능"
         />
       </div>
 
       {/* Image Upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">와인 사진 *</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">와인 사진</label>
         {wine.imagePreview || wine.image ? (
           <div className="relative">
             <img

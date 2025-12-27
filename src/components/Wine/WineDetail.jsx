@@ -32,7 +32,9 @@ function WineDetail({ wine, onEdit, onDelete, onBack }) {
       <div className="p-6 space-y-6">
         {/* 기본 정보 */}
         <div>
-          <p className="text-sm text-gray-500 mb-1">{formatDate(wine.date)}</p>
+          {wine.date && (
+            <p className="text-sm text-gray-500 mb-1">최초 판매: {formatDate(wine.date)}</p>
+          )}
           <h2 className="font-serif text-2xl font-bold text-gray-900 mb-2">{wine.name}</h2>
           <p className="text-lg text-gray-600">{wine.winery}</p>
 
