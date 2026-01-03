@@ -28,6 +28,17 @@ export const WINE_TYPES = {
 };
 
 /**
+ * 와인 분류 (카테고리)
+ */
+export const WINE_CATEGORIES = {
+  Red: { name: '레드', color: '#DC2626', icon: '🍷' },
+  White: { name: '화이트', color: '#F59E0B', icon: '🥂' },
+  Rosé: { name: '로제', color: '#EC4899', icon: '🌸' },
+  Natural: { name: '내츄럴', color: '#10B981', icon: '🌿' },
+  Sparkling: { name: '스파클링', color: '#8B5CF6', icon: '🍾' }
+};
+
+/**
  * 관리자 비밀번호 해시 (환경 변수에서 가져오거나 기본값 사용)
  */
 export const PASSWORD_HASH = import.meta.env.VITE_ADMIN_PASSWORD_HASH || '1c8fe0ec46c4d990dc9d51da05b35d284fe86d9f0841777b4cf8a3a3284c16e9';

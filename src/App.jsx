@@ -3,7 +3,7 @@ import useWineStore from './store/wineStore';
 import useFilterStore from './store/filterStore';
 import WorldMap from './components/Map/WorldMap';
 import FilterPanel from './components/Filter/FilterPanel';
-import { COUNTRIES, PASSWORD_HASH } from './lib/constants';
+import { COUNTRIES, WINE_CATEGORIES, PASSWORD_HASH } from './lib/constants';
 import { sha256 } from './lib/utils';
 import { analyzeWine } from './features/wine-analysis/api';
 
@@ -32,6 +32,7 @@ function App() {
     winery: '',
     wineryInfo: '',
     country: '',
+    wineCategory: 'Red',
     sweetness: 3,
     acidity: 3,
     body: 3,

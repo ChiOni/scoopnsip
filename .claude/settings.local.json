@@ -14,7 +14,9 @@
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
       "Bash(vercel --version:*)",
-      "Bash(node fix-wine-country.js:*)"
+      "Bash(node fix-wine-country.js:*)",
+      "Bash(node migrate-wine-categories.js:*)",
+      "Bash(node fix-majestic-chardonnay.js:*)"
     ]
   }
 }
