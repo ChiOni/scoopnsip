@@ -322,9 +322,23 @@ function App() {
 
   // Apply filters
   const filteredWines = applyFilters(wines);
-  const countryWines = filteredWines
-    .filter(w => w.country === selectedCountry)
-    .sort((a, b) => b.timestamp - a.timestamp);
+
+  // 국가별 와인 분리 및 정렬
+  const allCountryWines = filteredWines.filter(w => w.country === selectedCountry);
+
+  // 판매된 와인 (최초 판매일 있음) - 최신순
+  const soldWines = allCountryWines
+    .filter(w => w.date)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // 미판매 재고 (최초 판매일 없음) - 가격 낮은순
+  const unsoldWines = allCountryWines
+    .filter(w => !w.date)
+    .sort((a, b) => {
+      const priceA = a.price ? parseInt(a.price) : Infinity;
+      const priceB = b.price ? parseInt(b.price) : Infinity;
+      return priceA - priceB;
+    });
 
   // Loading screen
   if (loading) {
@@ -418,7 +432,7 @@ function App() {
         <>
           <div className="fixed inset-0 bg-black/30 z-30 fade-in" onClick={closeDrawer} />
 
-          <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-40 drawer scale-in overflow-hidden flex flex-col">
+          <div className="fixed right-0 top-0 bottom-0 w-full max-w-4xl bg-white shadow-2xl z-40 drawer scale-in overflow-hidden flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <button
                 onClick={() => {
@@ -472,34 +486,107 @@ function App() {
               {/* List View */}
               {drawerView === 'list' && (
                 <div>
-                  {countryWines.length === 0 ? (
+                  {allCountryWines.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 px-6">
                       <div className="text-6xl mb-4 opacity-20">🍷</div>
                       <p className="text-gray-400 text-sm">아직 와인이 없습니다</p>
                     </div>
                   ) : (
-                    countryWines.map(wine => (
-                      <div
-                        key={wine.id}
-                        className="wine-card cursor-pointer"
-                        onClick={() => {
-                          setSelectedWine(wine);
-                          setDrawerView('detail');
-                        }}
-                      >
-                        <div className="flex items-center p-4 gap-4">
-                          <img src={wine.image} alt={wine.name} className="w-16 h-16 rounded-lg object-cover" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500 mb-1">{wine.date}</p>
-                            <h3 className="font-medium text-gray-900 truncate">{wine.name}</h3>
-                            <p className="text-sm text-gray-600 truncate">{wine.winery}</p>
-                          </div>
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                    <div className="grid grid-cols-2 divide-x divide-gray-100">
+                      {/* 판매된 와인 */}
+                      <div className="pr-3">
+                        <div className="sticky top-0 bg-white/95 backdrop-blur-sm px-6 py-3 border-b border-gray-100">
+                          <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            판매 중
+                            <span className="text-xs text-gray-500 font-normal">({soldWines.length})</span>
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-1">최신순</p>
                         </div>
+                        {soldWines.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12 px-6">
+                            <div className="text-4xl mb-2 opacity-10">📦</div>
+                            <p className="text-gray-400 text-xs">판매 중인 와인이 없습니다</p>
+                          </div>
+                        ) : (
+                          soldWines.map(wine => (
+                            <div
+                              key={wine.id}
+                              className="wine-card cursor-pointer border-b border-gray-50"
+                              onClick={() => {
+                                setSelectedWine(wine);
+                                setDrawerView('detail');
+                              }}
+                            >
+                              <div className="p-4">
+                                <div className="flex items-start gap-3 mb-2">
+                                  {wine.image && (
+                                    <img src={wine.image} alt={wine.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-medium text-gray-900 text-sm truncate mb-1">{wine.name}</h3>
+                                    <p className="text-xs text-gray-500 truncate">{wine.winery}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-400">최초 판매: {wine.date}</span>
+                                  {wine.price && (
+                                    <span className="font-semibold text-purple-600">{parseInt(wine.price).toLocaleString()}원</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
-                    ))
+
+                      {/* 미판매 재고 */}
+                      <div className="pl-3">
+                        <div className="sticky top-0 bg-white/95 backdrop-blur-sm px-6 py-3 border-b border-gray-100">
+                          <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                            입고 예정
+                            <span className="text-xs text-gray-500 font-normal">({unsoldWines.length})</span>
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-1">낮은 가격순</p>
+                        </div>
+                        {unsoldWines.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12 px-6">
+                            <div className="text-4xl mb-2 opacity-10">✨</div>
+                            <p className="text-gray-400 text-xs">입고 예정 와인이 없습니다</p>
+                          </div>
+                        ) : (
+                          unsoldWines.map(wine => (
+                            <div
+                              key={wine.id}
+                              className="wine-card cursor-pointer border-b border-gray-50"
+                              onClick={() => {
+                                setSelectedWine(wine);
+                                setDrawerView('detail');
+                              }}
+                            >
+                              <div className="p-4">
+                                <div className="flex items-start gap-3 mb-2">
+                                  {wine.image && (
+                                    <img src={wine.image} alt={wine.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-medium text-gray-900 text-sm truncate mb-1">{wine.name}</h3>
+                                    <p className="text-xs text-gray-500 truncate">{wine.winery}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-amber-600 font-medium">입고 대기</span>
+                                  {wine.price && (
+                                    <span className="font-semibold text-purple-600">{parseInt(wine.price).toLocaleString()}원</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
