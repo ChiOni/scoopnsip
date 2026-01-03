@@ -326,14 +326,24 @@ function App() {
   // 국가별 와인 분리 및 정렬
   const allCountryWines = filteredWines.filter(w => w.country === selectedCountry);
 
-  // 판매된 와인 (최초 판매일 있음) - 최신순
-  const soldWines = allCountryWines
-    .filter(w => w.date)
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  // 판매 중 (재고 있음) - 최초 판매일 최신순, 판매일 없으면 하위로
+  const inStockWines = allCountryWines
+    .filter(w => w.inStock)
+    .sort((a, b) => {
+      // 최초 판매일이 있는 것이 우선
+      if (a.date && !b.date) return -1;
+      if (!a.date && b.date) return 1;
+      // 둘 다 판매일이 있으면 최신순
+      if (a.date && b.date) return new Date(b.date) - new Date(a.date);
+      // 둘 다 판매일이 없으면 가격 낮은순
+      const priceA = a.price ? parseInt(a.price) : Infinity;
+      const priceB = b.price ? parseInt(b.price) : Infinity;
+      return priceA - priceB;
+    });
 
-  // 미판매 재고 (최초 판매일 없음) - 가격 낮은순
-  const unsoldWines = allCountryWines
-    .filter(w => !w.date)
+  // 재고 없음 - 가격 낮은순
+  const outOfStockWines = allCountryWines
+    .filter(w => !w.inStock)
     .sort((a, b) => {
       const priceA = a.price ? parseInt(a.price) : Infinity;
       const priceB = b.price ? parseInt(b.price) : Infinity;
@@ -493,23 +503,23 @@ function App() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 divide-x divide-gray-100">
-                      {/* 판매된 와인 */}
+                      {/* 판매 중 (재고 있음) */}
                       <div className="pr-3">
                         <div className="sticky top-0 bg-white/95 backdrop-blur-sm px-6 py-3 border-b border-gray-100">
                           <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-500"></span>
                             판매 중
-                            <span className="text-xs text-gray-500 font-normal">({soldWines.length})</span>
+                            <span className="text-xs text-gray-500 font-normal">({inStockWines.length})</span>
                           </h3>
                           <p className="text-xs text-gray-500 mt-1">최신순</p>
                         </div>
-                        {soldWines.length === 0 ? (
+                        {inStockWines.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-12 px-6">
                             <div className="text-4xl mb-2 opacity-10">📦</div>
                             <p className="text-gray-400 text-xs">판매 중인 와인이 없습니다</p>
                           </div>
                         ) : (
-                          soldWines.map(wine => (
+                          inStockWines.map(wine => (
                             <div
                               key={wine.id}
                               className="wine-card cursor-pointer border-b border-gray-50"
@@ -540,23 +550,23 @@ function App() {
                         )}
                       </div>
 
-                      {/* 미판매 재고 */}
+                      {/* 재고 없음 */}
                       <div className="pl-3">
                         <div className="sticky top-0 bg-white/95 backdrop-blur-sm px-6 py-3 border-b border-gray-100">
                           <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                            입고 예정
-                            <span className="text-xs text-gray-500 font-normal">({unsoldWines.length})</span>
+                            <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                            재고 없음
+                            <span className="text-xs text-gray-500 font-normal">({outOfStockWines.length})</span>
                           </h3>
                           <p className="text-xs text-gray-500 mt-1">낮은 가격순</p>
                         </div>
-                        {unsoldWines.length === 0 ? (
+                        {outOfStockWines.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-12 px-6">
                             <div className="text-4xl mb-2 opacity-10">✨</div>
-                            <p className="text-gray-400 text-xs">입고 예정 와인이 없습니다</p>
+                            <p className="text-gray-400 text-xs">재고 없는 와인이 없습니다</p>
                           </div>
                         ) : (
-                          unsoldWines.map(wine => (
+                          outOfStockWines.map(wine => (
                             <div
                               key={wine.id}
                               className="wine-card cursor-pointer border-b border-gray-50"
@@ -576,7 +586,7 @@ function App() {
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="text-amber-600 font-medium">입고 대기</span>
+                                  <span className="text-gray-400 font-medium">재고 없음</span>
                                   {wine.price && (
                                     <span className="font-semibold text-purple-600">{parseInt(wine.price).toLocaleString()}원</span>
                                   )}
