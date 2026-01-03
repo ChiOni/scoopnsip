@@ -20,19 +20,19 @@ function WineDetail({ wine, onEdit, onDelete, onBack }) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* 와인 이미지 - 상단 1/3 영역 */}
-      <div className="relative h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex-shrink-0">
+      {/* 와인 이미지 - 축소된 상단 영역 */}
+      <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex-shrink-0">
         {wine.image && (
           <img
             src={wine.image}
             alt={wine.name}
-            className="w-full h-full object-contain p-4"
+            className="w-full h-full object-contain p-2"
           />
         )}
         {/* 카테고리 뱃지 오버레이 */}
         {wine.wineCategory && WINE_CATEGORIES[wine.wineCategory] && (
-          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
-            <span className="text-sm font-medium" style={{ color: WINE_CATEGORIES[wine.wineCategory].color }}>
+          <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg">
+            <span className="text-xs font-medium" style={{ color: WINE_CATEGORIES[wine.wineCategory].color }}>
               {WINE_CATEGORIES[wine.wineCategory].icon} {WINE_CATEGORIES[wine.wineCategory].name}
             </span>
           </div>
@@ -40,7 +40,7 @@ function WineDetail({ wine, onEdit, onDelete, onBack }) {
       </div>
 
       {/* 스크롤 가능한 콘텐츠 영역 */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* 헤더: 이름, 가격, 재고 (가장 중요한 정보를 상단에) */}
         <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
           <div className="flex items-start justify-between gap-4 mb-3">
